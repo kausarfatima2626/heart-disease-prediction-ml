@@ -1,0 +1,3 @@
+# Model Pipeline Artifact Placeholder
+# This file represents the serialized scikit-learn pipeline (Preprocessor + Best Classifier).
+# In local execution, joblib dumps the binary model object here.
