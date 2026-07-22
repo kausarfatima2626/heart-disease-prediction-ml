@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Risk Assessment Portal</title>
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-custom { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header-bg { background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white; border-radius: 15px 15px 0 0; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card card-custom">
+                <!-- Header -->
+                <div class="card-header header-bg p-4 text-center">
+                    <h2 class="mb-1">❤️ Heart Disease Prediction System</h2>
+                    <p class="mb-0 opacity-75">Fill in the clinical parameters below to evaluate heart risk level</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Display Prediction Results if available -->
+                    {% if prediction_text %}
+                    <div class="alert alert-{{ result_class }} text-center p-3 mb-4 rounded-3" role="alert">
+                        <h4 class="alert-heading mb-1">{{ prediction_text }}</h4>
+                        {% if probability is not none %}
+                            <p class="mb-0">Estimated Disease Risk Probability: <strong>{{ probability }}%</strong></p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if error_text %}
+                    <div class="alert alert-warning text-center mb-4" role="alert">
+                        {{ error_text }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Patient Input Form -->
+                    <form action="/predict" method="POST">
+                        <div class="row g-3">
+                            
+                            <!-- Age -->
+                            <div class="col-md-4">
+                                <label class="form-label font-weight-bold">Age (Years)</label>
+                                <input type="number" class="form-control" name="Age" min="1" max="120" value="{{ inputs.Age if inputs else 50 }}" required>
+                            </div>
+
+                            <!-- Sex -->
+                            <div class="col-md-4">
+                                <label class="form-label">Sex</label>
+                                <select class="form-select" name="Sex" required>
+                                    <option value="M" {% if inputs and inputs.Sex == 'M' %}selected{% endif %}>Male (M)</option>
+                                    <option value="F" {% if inputs and inputs.Sex == 'F' %}selected{% endif %}>Female (F)</option>
+                                </select>
+                            </div>
+
+                            <!-- Chest Pain Type -->
+                            <div class="col-md-4">
+                                <label class="form-label">Chest Pain Type</label>
+                                <select class="form-select" name="ChestPainType" required>
+                                    <option value="ASY" {% if inputs and inputs.ChestPainType == 'ASY' %}selected{% endif %}>Asymptomatic (ASY)</option>
+                                    <option value="NAP" {% if inputs and inputs.ChestPainType == 'NAP' %}selected{% endif %}>Non-Anginal Pain (NAP)</option>
+                                    <option value="ATA" {% if inputs and inputs.ChestPainType == 'ATA' %}selected{% endif %}>Atypical Angina (ATA)</option>
+                                    <option value="TA" {% if inputs and inputs.ChestPainType == 'TA' %}selected{% endif %}>Typical Angina (TA)</option>
+                                </select>
+                            </div>
+
+                            <!-- Resting BP -->
+                            <div class="col-md-4">
+                                <label class="form-label">Resting Blood Pressure (mm Hg)</label>
+                                <input type="number" class="form-control" name="RestingBP" value="{{ inputs.RestingBP if inputs else 120 }}" required>
+                            </div>
+
+                            <!-- Cholesterol -->
+                            <div class="col-md-4">
+                                <label class="form-label">Serum Cholesterol (mm/dl)</label>
+                                <input type="number" class="form-control" name="Cholesterol" value="{{ inputs.Cholesterol if inputs else 200 }}" required>
+                            </div>
+
+                            <!-- Fasting BS -->
+                            <div class="col-md-4">
+                                <label class="form-label">Fasting Blood Sugar > 120 mg/dl</label>
+                                <select class="form-select" name="FastingBS" required>
+                                    <option value="0" {% if inputs and inputs.FastingBS == 0 %}selected{% endif %}>No (0)</option>
+                                    <option value="1" {% if inputs and inputs.FastingBS == 1 %}selected{% endif %}>Yes (1)</option>
+                                </select>
+                            </div>
+
+                            <!-- Resting ECG -->
+                            <div class="col-md-4">
+                                <label class="form-label">Resting ECG Results</label>
+                                <select class="form-select" name="RestingECG" required>
+                                    <option value="Normal" {% if inputs and inputs.RestingECG == 'Normal' %}selected{% endif %}>Normal</option>
+                                    <option value="LVH" {% if inputs and inputs.RestingECG == 'LVH' %}selected{% endif %}>Left Ventricular Hypertrophy (LVH)</option>
+                                    <option value="ST" {% if inputs and inputs.RestingECG == 'ST' %}selected{% endif %}>ST-T Wave Abnormality (ST)</option>
+                                </select>
+                            </div>
+
+                            <!-- Max HR -->
+                            <div class="col-md-4">
+                                <label class="form-label">Maximum Heart Rate Achieved</label>
+                                <input type="number" class="form-control" name="MaxHR" value="{{ inputs.MaxHR if inputs else 150 }}" required>
+                            </div>
+
+                            <!-- Exercise Angina -->
+                            <div class="col-md-4">
+                                <label class="form-label">Exercise Induced Angina</label>
+                                <select class="form-select" name="ExerciseAngina" required>
+                                    <option value="N" {% if inputs and inputs.ExerciseAngina == 'N' %}selected{% endif %}>No (N)</option>
+                                    <option value="Y" {% if inputs and inputs.ExerciseAngina == 'Y' %}selected{% endif %}>Yes (Y)</option>
+                                </select>
+                            </div>
+
+                            <!-- Oldpeak -->
+                            <div class="col-md-6">
+                                <label class="form-label">Oldpeak (ST Depression)</label>
+                                <input type="number" step="0.1" class="form-control" name="Oldpeak" value="{{ inputs.Oldpeak if inputs else 0.0 }}" required>
+                            </div>
+
+                            <!-- ST Slope -->
+                            <div class="col-md-6">
+                                <label class="form-label">ST Slope</label>
+                                <select class="form-select" name="ST_Slope" required>
+                                    <option value="Up" {% if inputs and inputs.ST_Slope == 'Up' %}selected{% endif %}>Upward (Up)</option>
+                                    <option value="Flat" {% if inputs and inputs.ST_Slope == 'Flat' %}selected{% endif %}>Flat</option>
+                                    <option value="Down" {% if inputs and inputs.ST_Slope == 'Down' %}selected{% endif %}>Downward (Down)</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-3">🔍 Analyze Risk Assessment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <p class="text-center text-muted mt-3 small">
+                * Note: This AI decision support system is built for screening purposes and does not replace medical consultation.
+            </p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
