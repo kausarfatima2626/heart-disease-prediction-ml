@@ -24,3 +24,8 @@ heart-disease-prediction-ml/
 - Built robust `ColumnTransformer` preprocessing pipeline using `StandardScaler` for continuous variables and `OneHotEncoder` for categorical variables.
 - Applied stratified train-test splitting (80-20) to prevent class distribution imbalance.
 - Verified preprocessor transformation pipeline while strictly preventing Data Leakage.
+
+## 🚀 Day 3 Progress
+- Implemented model training pipeline comparing Logistic Regression and Random Forest.
+- Prioritized **Recall Score** to minimize False Negatives for medical safety.
+- Bundled the entire preprocessor + model into a single serialized `heart_disease_pipeline.joblib` artifact.
