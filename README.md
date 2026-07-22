@@ -19,3 +19,8 @@ heart-disease-prediction-ml/
 ├── templates/        # HTML templates for Flask
 ├── app.py            # Flask backend controller
 └── requirements.txt  # Project dependencies
+
+## 🚀 Day 2 Progress
+- Built robust `ColumnTransformer` preprocessing pipeline using `StandardScaler` for continuous variables and `OneHotEncoder` for categorical variables.
+- Applied stratified train-test splitting (80-20) to prevent class distribution imbalance.
+- Verified preprocessor transformation pipeline while strictly preventing Data Leakage.
