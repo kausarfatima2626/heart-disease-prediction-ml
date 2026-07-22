@@ -29,3 +29,8 @@ heart-disease-prediction-ml/
 - Implemented model training pipeline comparing Logistic Regression and Random Forest.
 - Prioritized **Recall Score** to minimize False Negatives for medical safety.
 - Bundled the entire preprocessor + model into a single serialized `heart_disease_pipeline.joblib` artifact.
+
+## 🚀 Day 4 Progress
+- Built Flask web application backend (`app.py`) with pipeline model loading and POST prediction route.
+- Designed a responsive HTML input form UI (`templates/index.html`) using Bootstrap 5.
+- Integrated probability estimation alongside binary classification for risk intensity display.
