@@ -2,16 +2,49 @@ import os
 from flask import Flask, render_template, request
 import joblib
 import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 
 app = Flask(__name__)
 
-# Load model pipeline
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, 'models', 'heart_disease_pipeline.joblib')
+MODEL_DIR = os.path.join(BASE_DIR, 'models')
+MODEL_PATH = os.path.join(MODEL_DIR, 'heart_disease_pipeline.joblib')
+DATA_PATH = os.path.join(BASE_DIR, 'data', 'heart.csv')
 
-pipeline = None
-if os.path.exists(MODEL_PATH):
-    pipeline = joblib.load(MODEL_PATH)
+def get_or_train_model():
+    if os.path.exists(MODEL_PATH):
+        return joblib.load(MODEL_PATH)
+    
+    # Auto-train if missing
+    if os.path.exists(DATA_PATH):
+        os.makedirs(MODEL_DIR, exist_ok=True)
+        df = pd.read_csv(DATA_PATH)
+        X = df.drop('HeartDisease', axis=1)
+        y = df['HeartDisease']
+
+        categorical_cols = ['Sex', 'ChestPainType', 'RestingECG', 'ExerciseAngina', 'ST_Slope']
+        numerical_cols = ['Age', 'RestingBP', 'Cholesterol', 'FastingBS', 'MaxHR', 'Oldpeak']
+
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('num', StandardScaler(), numerical_cols),
+                ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_cols)
+            ]
+        )
+
+        pipeline = Pipeline([
+            ('preprocessor', preprocessor),
+            ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
+        ])
+
+        pipeline.fit(X, y)
+        joblib.dump(pipeline, MODEL_PATH)
+        return pipeline
+    return None
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -21,10 +54,10 @@ def home():
 
     if request.method == 'POST':
         try:
-            if pipeline is None:
-                raise Exception("Model file not found. Please train the model first.")
+            model = get_or_train_model()
+            if model is None:
+                raise Exception("Dataset/Model not found on server.")
 
-            # Form data extraction
             input_data = {
                 'Age': float(request.form.get('Age', 0)),
                 'Sex': request.form.get('Sex', 'M'),
@@ -40,8 +73,8 @@ def home():
             }
 
             input_df = pd.DataFrame([input_data])
-            pred = pipeline.predict(input_df)[0]
-            prob = pipeline.predict_proba(input_df)[0][1]
+            pred = model.predict(input_df)[0]
+            prob = model.predict_proba(input_df)[0][1]
 
             prediction = "High Risk" if pred == 1 else "Low Risk"
             probability = f"{round(prob * 100, 2)}%"
