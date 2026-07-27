@@ -107,7 +107,7 @@ def home():
 
     if request.method == 'POST':
         try:
-            model = get_trained_model()
+            model, err_msg = get_trained_model()
             if model is None:
                 raise Exception("Data file missing at path: " + DATA_PATH)
 
