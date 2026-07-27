@@ -8,48 +8,9 @@ from sklearn.pipeline import Pipeline
 
 app = Flask(__name__)
 
-# Inline HTML Template
-HTML_TEMPLATE = '''
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Heart Disease Prediction</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body class="bg-light p-4">
-    <div class="container" style="max-width: 600px;">
-        <h2 class="text-center mb-4 text-primary">Heart Disease Risk Predictor</h2>
-        
-        {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
 
-        {% if prediction %}
-            <div class="alert {% if prediction == 'High Risk' %}alert-danger{% else %}alert-success{% endif %} text-center shadow-sm">
-                <h3>Prediction: {{ prediction }}</h3>
-                <p class="mb-0">Confidence / Probability: {{ probability }}</p>
-            </div>
-        {% endif %}
 
-        <form method="POST" class="card p-4 shadow-sm bg-white mt-3">
-            <div class="mb-3"><label class="form-label font-weight-bold">Age:</label><input type="number" name="Age" class="form-control" value="50" required></div>
-            <div class="mb-3"><label class="form-label">Sex (M/F):</label><input type="text" name="Sex" class="form-control" value="M" required></div>
-            <div class="mb-3"><label class="form-label">Chest Pain Type (TA/ATA/NAP/ASY):</label><input type="text" name="ChestPainType" class="form-control" value="ASY" required></div>
-            <div class="mb-3"><label class="form-label">Resting BP:</label><input type="number" name="RestingBP" class="form-control" value="140" required></div>
-            <div class="mb-3"><label class="form-label">Cholesterol:</label><input type="number" name="Cholesterol" class="form-control" value="280" required></div>
-            <div class="mb-3"><label class="form-label">Fasting BS (0 or 1):</label><input type="number" name="FastingBS" class="form-control" value="0" required></div>
-            <div class="mb-3"><label class="form-label">Resting ECG (Normal/ST/LVH):</label><input type="text" name="RestingECG" class="form-control" value="Normal" required></div>
-            <div class="mb-3"><label class="form-label">Max HR:</label><input type="number" name="MaxHR" class="form-control" value="150" required></div>
-            <div class="mb-3"><label class="form-label">Exercise Angina (Y/N):</label><input type="text" name="ExerciseAngina" class="form-control" value="N" required></div>
-            <div class="mb-3"><label class="form-label">Oldpeak:</label><input type="number" step="0.1" name="Oldpeak" class="form-control" value="1.0" required></div>
-            <div class="mb-3"><label class="form-label">ST Slope (Up/Flat/Down):</label><input type="text" name="ST_Slope" class="form-control" value="Flat" required></div>
-            
-            <button type="submit" class="btn btn-primary w-100 py-2 fs-5">Analyze Risk</button>
-        </form>
-    </div>
-</body>
-</html>
-'''
+       
 
 # Robust Model Initializer (Zero External Dependencies)
 def build_and_train_model():
