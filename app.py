@@ -11,11 +11,21 @@ from sklearn.pipeline import Pipeline
 
 app = Flask(__name__)
 
-# Base Paths
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(BASE_DIR, 'data', 'heart.csv')
 
-# Inline HTML Template to avoid missing file errors
+
+# Inline HTML Template to avoid missing file errors# Base Paths with Smart Fallback
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+LOCAL_DATA = os.path.join(BASE_DIR, 'data', 'heart.csv')
+ALT_DATA = os.path.join(BASE_DIR, '..', 'data', 'heart.csv')
+ONLINE_DATA = 'https://raw.githubusercontent.com/fedesoriano/heart-failure-prediction/main/heart.csv'
+
+if os.path.exists(LOCAL_DATA):
+    DATA_PATH = LOCAL_DATA
+elif os.path.exists(ALT_DATA):
+    DATA_PATH = ALT_DATA
+else:
+    DATA_PATH = ONLINE_DATA
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html>
