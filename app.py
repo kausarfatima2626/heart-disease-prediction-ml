@@ -69,10 +69,15 @@ HTML_TEMPLATE = '''
 '''
 
 def get_trained_model():
-    if not os.path.exists(DATA_PATH):
-        return None
+    # Try reading data from path or online URL
+    try:
+        if os.path.exists(DATA_PATH):
+            df = pd.read_csv(DATA_PATH)
+        else:
+            df = pd.read_csv('https://raw.githubusercontent.com/fedesoriano/heart-failure-prediction/main/heart.csv')
+    except Exception as e:
+        return None, f"Dataset loading error: {str(e)}"
         
-    df = pd.read_csv(DATA_PATH)
     X = df.drop('HeartDisease', axis=1)
     y = df['HeartDisease']
 
@@ -92,7 +97,7 @@ def get_trained_model():
     ])
 
     pipeline.fit(X, y)
-    return pipeline
+    return pipeline, None
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
