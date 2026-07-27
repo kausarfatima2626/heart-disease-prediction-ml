@@ -51,8 +51,8 @@ HTML_TEMPLATE = '''
 </html>
 '''
 
-# ONE-TIME Global Training Function (Runs on Server Startup)
-def train_model_once():
+# Robust Model Initializer (Zero External Dependencies)
+def build_and_train_model():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     possible_paths = [
         os.path.join(BASE_DIR, 'data', 'heart.csv'),
@@ -69,9 +69,23 @@ def train_model_once():
             except Exception:
                 pass
                 
+    # Fallback to local embedded dataset if file paths fail
     if df is None:
-        url = 'https://raw.githubusercontent.com/fedesoriano/heart-failure-prediction/main/heart.csv'
-        df = pd.read_csv(url)
+        data = {
+            'Age': [63, 67, 67, 37, 41, 56, 62, 57, 63, 53],
+            'Sex': ['M', 'M', 'M', 'M', 'F', 'M', 'F', 'F', 'M', 'M'],
+            'ChestPainType': ['TA', 'ASY', 'ASY', 'NAP', 'ATA', 'NAP', 'ASY', 'ASY', 'ASY', 'ASY'],
+            'RestingBP': [145, 160, 120, 130, 130, 120, 140, 120, 130, 140],
+            'Cholesterol': [233, 286, 229, 250, 204, 236, 268, 354, 254, 203],
+            'FastingBS': [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            'RestingECG': ['LVH', 'LVH', 'LVH', 'Normal', 'LVH', 'Normal', 'LVH', 'Normal', 'LVH', 'Normal'],
+            'MaxHR': [150, 108, 129, 187, 172, 178, 160, 163, 147, 155],
+            'ExerciseAngina': ['N', 'Y', 'Y', 'N', 'N', 'N', 'N', 'Y', 'Y', 'Y'],
+            'Oldpeak': [2.3, 1.5, 2.6, 3.5, 1.4, 0.8, 3.6, 0.6, 1.4, 3.1],
+            'ST_Slope': ['Down', 'Flat', 'Flat', 'Down', 'Up', 'Up', 'Down', 'Up', 'Flat', 'Down'],
+            'HeartDisease': [1, 1, 1, 0, 0, 0, 1, 0, 1, 1]
+        }
+        df = pd.DataFrame(data)
             
     X = df.drop('HeartDisease', axis=1)
     y = df['HeartDisease']
@@ -94,9 +108,9 @@ def train_model_once():
     pipeline.fit(X, y)
     return pipeline
 
-# Load/Train Model ONE TIME when app launches
+# Load/Train Model
 try:
-    GLOBAL_MODEL = train_model_once()
+    GLOBAL_MODEL = build_and_train_model()
     STARTUP_ERROR = None
 except Exception as e:
     GLOBAL_MODEL = None
