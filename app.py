@@ -1,9 +1,6 @@
-
 import os
 from flask import Flask, request, render_template_string
-import joblib
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
@@ -11,21 +8,7 @@ from sklearn.pipeline import Pipeline
 
 app = Flask(__name__)
 
-
-
-# Inline HTML Template to avoid missing file errors# Base Paths with Smart Fallback
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-LOCAL_DATA = os.path.join(BASE_DIR, 'data', 'heart.csv')
-ALT_DATA = os.path.join(BASE_DIR, '..', 'data', 'heart.csv')
-ONLINE_DATA = 'https://raw.githubusercontent.com/fedesoriano/heart-failure-prediction/main/heart.csv'
-
-if os.path.exists(LOCAL_DATA):
-    DATA_PATH = LOCAL_DATA
-elif os.path.exists(ALT_DATA):
-    DATA_PATH = ALT_DATA
-else:
-    DATA_PATH = ONLINE_DATA
+# Inline HTML Template
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html>
@@ -42,42 +25,54 @@ HTML_TEMPLATE = '''
         {% endif %}
 
         {% if prediction %}
-            <div class="alert {% if prediction == 'High Risk' %}alert-danger{% else %}alert-success{% endif %} text-center">
+            <div class="alert {% if prediction == 'High Risk' %}alert-danger{% else %}alert-success{% endif %} text-center shadow-sm">
                 <h3>Prediction: {{ prediction }}</h3>
-                <p>Confidence / Probability: {{ probability }}</p>
+                <p class="mb-0">Confidence / Probability: {{ probability }}</p>
             </div>
         {% endif %}
 
-        <form method="POST" class="card p-4 shadow-sm bg-white">
-            <div class="mb-3"><label>Age:</label><input type="number" name="Age" class="form-control" value="50" required></div>
-            <div class="mb-3"><label>Sex (M/F):</label><input type="text" name="Sex" class="form-control" value="M" required></div>
-            <div class="mb-3"><label>Chest Pain Type (TA/ATA/NAP/ASY):</label><input type="text" name="ChestPainType" class="form-control" value="ASY" required></div>
-            <div class="mb-3"><label>Resting BP:</label><input type="number" name="RestingBP" class="form-control" value="140" required></div>
-            <div class="mb-3"><label>Cholesterol:</label><input type="number" name="Cholesterol" class="form-control" value="280" required></div>
-            <div class="mb-3"><label>Fasting BS (0 or 1):</label><input type="number" name="FastingBS" class="form-control" value="0" required></div>
-            <div class="mb-3"><label>Resting ECG (Normal/ST/LVH):</label><input type="text" name="RestingECG" class="form-control" value="Normal" required></div>
-            <div class="mb-3"><label>Max HR:</label><input type="number" name="MaxHR" class="form-control" value="150" required></div>
-            <div class="mb-3"><label>Exercise Angina (Y/N):</label><input type="text" name="ExerciseAngina" class="form-control" value="N" required></div>
-            <div class="mb-3"><label>Oldpeak:</label><input type="number" step="0.1" name="Oldpeak" class="form-control" value="1.0" required></div>
-            <div class="mb-3"><label>ST Slope (Up/Flat/Down):</label><input type="text" name="ST_Slope" class="form-control" value="Flat" required></div>
+        <form method="POST" class="card p-4 shadow-sm bg-white mt-3">
+            <div class="mb-3"><label class="form-label font-weight-bold">Age:</label><input type="number" name="Age" class="form-control" value="50" required></div>
+            <div class="mb-3"><label class="form-label">Sex (M/F):</label><input type="text" name="Sex" class="form-control" value="M" required></div>
+            <div class="mb-3"><label class="form-label">Chest Pain Type (TA/ATA/NAP/ASY):</label><input type="text" name="ChestPainType" class="form-control" value="ASY" required></div>
+            <div class="mb-3"><label class="form-label">Resting BP:</label><input type="number" name="RestingBP" class="form-control" value="140" required></div>
+            <div class="mb-3"><label class="form-label">Cholesterol:</label><input type="number" name="Cholesterol" class="form-control" value="280" required></div>
+            <div class="mb-3"><label class="form-label">Fasting BS (0 or 1):</label><input type="number" name="FastingBS" class="form-control" value="0" required></div>
+            <div class="mb-3"><label class="form-label">Resting ECG (Normal/ST/LVH):</label><input type="text" name="RestingECG" class="form-control" value="Normal" required></div>
+            <div class="mb-3"><label class="form-label">Max HR:</label><input type="number" name="MaxHR" class="form-control" value="150" required></div>
+            <div class="mb-3"><label class="form-label">Exercise Angina (Y/N):</label><input type="text" name="ExerciseAngina" class="form-control" value="N" required></div>
+            <div class="mb-3"><label class="form-label">Oldpeak:</label><input type="number" step="0.1" name="Oldpeak" class="form-control" value="1.0" required></div>
+            <div class="mb-3"><label class="form-label">ST Slope (Up/Flat/Down):</label><input type="text" name="ST_Slope" class="form-control" value="Flat" required></div>
             
-            <button type="submit" class="btn btn-primary w-100">Analyze Risk</button>
+            <button type="submit" class="btn btn-primary w-100 py-2 fs-5">Analyze Risk</button>
         </form>
     </div>
 </body>
 </html>
 '''
 
-def get_trained_model():
-    # Try reading data from path or online URL
-    try:
-        if os.path.exists(DATA_PATH):
-            df = pd.read_csv(DATA_PATH)
-        else:
-            df = pd.read_csv('https://raw.githubusercontent.com/fedesoriano/heart-failure-prediction/main/heart.csv')
-    except Exception as e:
-        return None, f"Dataset loading error: {str(e)}"
-        
+# ONE-TIME Global Training Function (Runs on Server Startup)
+def train_model_once():
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    possible_paths = [
+        os.path.join(BASE_DIR, 'data', 'heart.csv'),
+        os.path.join(BASE_DIR, 'heart.csv'),
+        os.path.join(BASE_DIR, '..', 'data', 'heart.csv')
+    ]
+    
+    df = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            try:
+                df = pd.read_csv(path)
+                break
+            except Exception:
+                pass
+                
+    if df is None:
+        url = 'https://raw.githubusercontent.com/fedesoriano/heart-failure-prediction/main/heart.csv'
+        df = pd.read_csv(url)
+            
     X = df.drop('HeartDisease', axis=1)
     y = df['HeartDisease']
 
@@ -97,19 +92,26 @@ def get_trained_model():
     ])
 
     pipeline.fit(X, y)
-    return pipeline, None
+    return pipeline
+
+# Load/Train Model ONE TIME when app launches
+try:
+    GLOBAL_MODEL = train_model_once()
+    STARTUP_ERROR = None
+except Exception as e:
+    GLOBAL_MODEL = None
+    STARTUP_ERROR = str(e)
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
     prediction = None
     probability = None
-    error = None
+    error = STARTUP_ERROR
 
     if request.method == 'POST':
         try:
-            model, err_msg = get_trained_model()
-            if model is None:
-                raise Exception("Data file missing at path: " + DATA_PATH)
+            if GLOBAL_MODEL is None:
+                raise Exception(f"Model initialization failed: {STARTUP_ERROR}")
 
             input_data = {
                 'Age': float(request.form.get('Age', 0)),
@@ -126,8 +128,8 @@ def home():
             }
 
             input_df = pd.DataFrame([input_data])
-            pred = model.predict(input_df)[0]
-            prob = model.predict_proba(input_df)[0][1]
+            pred = GLOBAL_MODEL.predict(input_df)[0]
+            prob = GLOBAL_MODEL.predict_proba(input_df)[0][1]
 
             prediction = "High Risk" if pred == 1 else "Low Risk"
             probability = f"{round(prob * 100, 2)}%"
