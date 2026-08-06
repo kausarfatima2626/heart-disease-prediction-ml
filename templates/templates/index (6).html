@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CardioSense — Heart Disease Risk Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-950:#0b1524;
+    --navy-900:#0f1e33;
+    --navy-800:#16283f;
+    --paper:#f6f4ef;
+    --paper-dim:#eae7df;
+    --coral:#f2545b;
+    --coral-dim:#f2545b22;
+    --teal:#3fbf9f;
+    --teal-dim:#3fbf9f22;
+    --ink:#101418;
+    --ink-soft:#5a6270;
+    --line:#dedad0;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 6vw;
+    background:var(--navy-950);
+    border-bottom:1px solid #ffffff14;
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px;
+    font-family:'Fraunces',serif; font-weight:600; font-size:1.15rem;
+    color:var(--paper); letter-spacing:.01em;
+  }
+  .brand svg{ width:22px; height:22px; }
+  nav .nav-links{ display:flex; gap:28px; font-size:.9rem; color:#c8cedb; }
+  nav .nav-links a{ text-decoration:none; opacity:.85; transition:opacity .2s; }
+  nav .nav-links a:hover{ opacity:1; color:var(--coral); }
+
+  /* ---------- HERO ---------- */
+  header.hero{
+    background:radial-gradient(120% 140% at 15% 0%, #1a2c47 0%, var(--navy-950) 60%);
+    color:var(--paper);
+    padding:8vh 6vw 10vh;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-inner{
+    max-width:1180px; margin:0 auto;
+    display:grid; grid-template-columns:1.1fr .9fr; gap:48px; align-items:center;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:.78rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--teal); margin-bottom:18px; display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{
+    content:""; width:8px; height:8px; border-radius:50%; background:var(--coral);
+    box-shadow:0 0 0 0 var(--coral); animation:pulse-dot 1.8s infinite;
+  }
+  @keyframes pulse-dot{
+    0%{box-shadow:0 0 0 0 #f2545b66;}
+    70%{box-shadow:0 0 0 10px #f2545b00;}
+    100%{box-shadow:0 0 0 0 #f2545b00;}
+  }
+  h1.headline{
+    font-family:'Fraunces',serif; font-weight:600;
+    font-size:clamp(2.2rem,4.2vw,3.4rem); line-height:1.08; margin:0 0 20px;
+  }
+  h1.headline em{ font-style:normal; color:var(--coral); }
+  .hero p.sub{
+    font-size:1.05rem; line-height:1.65; color:#c8cedb; max-width:46ch; margin:0 0 32px;
+  }
+  .hero-cta{
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--coral); color:#fff; text-decoration:none;
+    padding:14px 26px; border-radius:999px; font-weight:600; font-size:.95rem;
+    transition:transform .2s ease, box-shadow .2s ease;
+    box-shadow:0 8px 24px -8px #f2545b88;
+  }
+  .hero-cta:hover{ transform:translateY(-2px); box-shadow:0 12px 28px -8px #f2545baa; }
+
+  /* ECG waveform */
+  .ecg-wrap{
+    position:relative; width:100%; height:220px;
+    border:1px solid #ffffff1c; border-radius:var(--radius);
+    background:linear-gradient(180deg,#0f1e33,#0c1830);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .ecg-wrap svg{ width:100%; height:100%; }
+  .ecg-line{
+    fill:none; stroke:var(--teal); stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray:1400; stroke-dashoffset:1400;
+    animation:draw 3.2s ease-in-out infinite;
+    filter:drop-shadow(0 0 6px #3fbf9f88);
+  }
+  @keyframes draw{
+    0%{ stroke-dashoffset:1400; }
+    55%{ stroke-dashoffset:0; }
+    100%{ stroke-dashoffset:-1400; }
+  }
+  .ecg-grid line{ stroke:#ffffff0a; stroke-width:1; }
+
+  /* ---------- FORM SECTION ---------- */
+  main{
+    max-width:900px; margin:-64px auto 0; padding:0 6vw 10vh; position:relative; z-index:2;
+  }
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:0 24px 60px -30px rgba(15,30,51,.35);
+    padding:44px 40px;
+  }
+  .card h2{
+    font-family:'Fraunces',serif; font-weight:600; font-size:1.5rem; margin:0 0 6px;
+  }
+  .card > p.lead{
+    color:var(--ink-soft); margin:0 0 32px; font-size:.95rem;
+  }
+  .group{ margin-bottom:34px; }
+  .group-title{
+    font-family:'IBM Plex Mono',monospace; font-size:.75rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--teal); margin-bottom:16px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .group-title::after{ content:""; flex:1; height:1px; background:var(--line); }
+
+  .grid-fields{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px;
+  }
+  .field label{
+    display:block; font-size:.82rem; font-weight:600; color:var(--ink); margin-bottom:7px;
+  }
+  .field .hint{ font-size:.74rem; color:var(--ink-soft); font-weight:400; margin-left:4px; }
+  .field input, .field select{
+    width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:10px;
+    font-family:'IBM Plex Mono',monospace; font-size:.9rem; color:var(--ink);
+    background:var(--paper); transition:border-color .2s, box-shadow .2s;
+  }
+  .field input:focus, .field select:focus{
+    outline:none; border-color:var(--teal); box-shadow:0 0 0 3px var(--teal-dim);
+  }
+
+  .submit-row{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:8px; gap:16px; flex-wrap:wrap;
+  }
+  .submit-row p{ font-size:.78rem; color:var(--ink-soft); margin:0; max-width:32ch; }
+  button.predict-btn{
+    background:var(--navy-950); color:#fff; border:none; cursor:pointer;
+    padding:15px 30px; border-radius:999px; font-weight:600; font-size:.95rem;
+    font-family:'Inter',sans-serif; display:inline-flex; align-items:center; gap:10px;
+    transition:transform .2s ease, background .2s ease;
+  }
+  button.predict-btn:hover{ background:var(--coral); transform:translateY(-2px); }
+
+  /* ---------- RESULT ---------- */
+  .result{
+    margin-top:32px; padding:26px 28px; border-radius:14px;
+    display:flex; align-items:center; gap:18px;
+    border:1px solid var(--line);
+  }
+  .result.low{ background:var(--teal-dim); border-color:#3fbf9f55; }
+  .result.high{ background:var(--coral-dim); border-color:#f2545b55; }
+  .result .badge{
+    width:46px; height:46px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem;
+  }
+  .result.low .badge{ background:var(--teal); color:#fff; }
+  .result.high .badge{ background:var(--coral); color:#fff; }
+  .result h3{ margin:0 0 4px; font-family:'Fraunces',serif; font-size:1.1rem; }
+  .result p{ margin:0; color:var(--ink-soft); font-size:.88rem; }
+
+  footer{
+    text-align:center; padding:32px 6vw; color:var(--ink-soft); font-size:.82rem;
+    border-top:1px solid var(--line);
+  }
+  footer a{ color:var(--coral); text-decoration:none; font-weight:600; }
+
+  @media (max-width:860px){
+    .hero-inner{ grid-template-columns:1fr; }
+    main{ margin-top:-40px; }
+    .card{ padding:30px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 21s-7.5-4.6-10-9.3C.4 8.4 2 4.5 5.6 4c2.1-.3 3.9.8 6.4 3.2C14.5 4.8 16.3 3.7 18.4 4c3.6.5 5.2 4.4 3.6 7.7C19.5 16.4 12 21 12 21z" stroke="#f2545b" stroke-width="1.6"/>
+    </svg>
+    CardioSense
+  </div>
+  <div class="nav-links">
+    <a href="#check">Risk Check</a>
+    <a href="https://github.com/kausarfatima2626/heart-disease-prediction-ml" target="_blank">GitHub</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="eyebrow">ML-powered · Instant result</div>
+      <h1 class="headline">Read your heart's<br><em>signal</em>, before it becomes a symptom.</h1>
+      <p class="sub">Enter a few clinical values — age, blood pressure, cholesterol, ECG readings — and a trained model estimates your risk of heart disease in seconds.</p>
+      <a href="#check" class="hero-cta">Start my risk check →</a>
+    </div>
+    <div class="ecg-wrap">
+      <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+        <g class="ecg-grid">
+          <line x1="0" y1="50" x2="400" y2="50"/><line x1="0" y1="100" x2="400" y2="100"/><line x1="0" y1="150" x2="400" y2="150"/>
+        </g>
+        <path class="ecg-line" d="M0,100 L60,100 L80,100 L95,60 L110,140 L125,20 L140,160 L155,100 L180,100 L220,100 L235,80 L250,120 L265,100 L400,100" />
+      </svg>
+    </div>
+  </div>
+</header>
+
+<main id="check">
+  <div class="card">
+    <h2>Enter your clinical details</h2>
+    <p class="lead">All fields are used only to generate your prediction — nothing is stored.</p>
+
+    <!-- Adjust the action URL + field "name" attributes to match your Flask app.py route and variable order -->
+    <form action="/predict" method="POST">
+
+      <div class="group">
+        <div class="group-title">Personal</div>
+        <div class="grid-fields">
+          <div class="field">
+            <label>Age <span class="hint">(years)</span></label>
+            <input type="number" name="age" placeholder="e.g. 52" required>
+          </div>
+          <div class="field">
+            <label>Sex</label>
+            <select name="sex" required>
+              <option value="1">Male</option>
+              <option value="0">Female</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Vitals</div>
+        <div class="grid-fields">
+          <div class="field">
+            <label>Resting blood pressure <span class="hint">(mm Hg)</span></label>
+            <input type="number" name="trestbps" placeholder="e.g. 130" required>
+          </div>
+          <div class="field">
+            <label>Cholesterol <span class="hint">(mg/dl)</span></label>
+            <input type="number" name="chol" placeholder="e.g. 246" required>
+          </div>
+          <div class="field">
+            <label>Fasting blood sugar &gt;120 mg/dl</label>
+            <select name="fbs" required>
+              <option value="0">No</option>
+              <option value="1">Yes</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Max heart rate achieved</label>
+            <input type="number" name="thalach" placeholder="e.g. 150" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">Heart test results</div>
+        <div class="grid-fields">
+          <div class="field">
+            <label>Chest pain type</label>
+            <select name="cp" required>
+              <option value="0">Typical angina</option>
+              <option value="1">Atypical angina</option>
+              <option value="2">Non-anginal pain</option>
+              <option value="3">Asymptomatic</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Resting ECG results</label>
+            <select name="restecg" required>
+              <option value="0">Normal</option>
+              <option value="1">ST-T wave abnormality</option>
+              <option value="2">Left ventricular hypertrophy</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Exercise induced angina</label>
+            <select name="exang" required>
+              <option value="0">No</option>
+              <option value="1">Yes</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>ST depression <span class="hint">(oldpeak)</span></label>
+            <input type="number" step="0.1" name="oldpeak" placeholder="e.g. 1.2" required>
+          </div>
+          <div class="field">
+            <label>Slope of peak ST segment</label>
+            <select name="slope" required>
+              <option value="0">Upsloping</option>
+              <option value="1">Flat</option>
+              <option value="2">Downsloping</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Major vessels colored <span class="hint">(0–3)</span></label>
+            <input type="number" min="0" max="3" name="ca" placeholder="e.g. 0" required>
+          </div>
+          <div class="field">
+            <label>Thalassemia</label>
+            <select name="thal" required>
+              <option value="1">Normal</option>
+              <option value="2">Fixed defect</option>
+              <option value="3">Reversible defect</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="submit-row">
+        <p>Prediction is generated instantly from your inputs above.</p>
+        <button type="submit" class="predict-btn">Check my risk →</button>
+      </div>
+    </form>
+
+    <!-- Flask/Jinja: render prediction below the form -->
+    {% if prediction_text %}
+    <div class="result {{ 'high' if 'not' not in prediction_text|lower and 'no' not in prediction_text|lower else 'low' }}">
+      <div class="badge">{{ '⚠' if 'not' not in prediction_text|lower and 'no' not in prediction_text|lower else '✓' }}</div>
+      <div>
+        <h3>{{ prediction_text }}</h3>
+        <p>This is a model estimate, not a medical diagnosis. Please consult a doctor for confirmation.</p>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</main>
+
+<footer>
+  Built by Kausar Fatima · <a href="https://github.com/kausarfatima2626/heart-disease-prediction-ml" target="_blank">View source on GitHub</a>
+</footer>
+
+</body>
+</html>
