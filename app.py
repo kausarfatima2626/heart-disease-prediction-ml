@@ -10,99 +10,258 @@ app = Flask(__name__)
 
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Heart Disease Risk Predictor</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            /* Aesthetic Medical Background Image with Overlay */
-            background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), 
-                        url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
-            background-size: cover;
-            min-height: 100vh;
-            color: #333;
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-        }
-        .form-label {
-            font-weight: 600;
-            color: #1e293b;
-            font-size: 0.9rem;
-        }
-        .form-control {
-            border-radius: 10px;
-            border: 1px solid #cbd5e1;
-            padding: 10px 14px;
-        }
-        .form-control:focus {
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25);
-            border-color: #0ea5e9;
-        }
-        .btn-custom {
-            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
-        }
-        .btn-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
-        }
-        .title-text {
-            color: #ffffff;
-            font-weight: 600;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CardioSense — Heart Disease Risk Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-950:#0b1524;
+    --paper:#f6f4ef;
+    --coral:#f2545b;
+    --coral-dim:#f2545b22;
+    --teal:#3fbf9f;
+    --teal-dim:#3fbf9f22;
+    --ink:#101418;
+    --ink-soft:#5a6270;
+    --line:#dedad0;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  header.hero{
+    background:radial-gradient(120% 140% at 15% 0%, #1a2c47 0%, var(--navy-950) 60%);
+    color:var(--paper);
+    padding:7vh 6vw 9vh;
+    text-align:center;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:.78rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--teal); margin-bottom:16px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  .eyebrow::before{
+    content:""; width:8px; height:8px; border-radius:50%; background:var(--coral);
+    animation:pulse-dot 1.8s infinite;
+  }
+  @keyframes pulse-dot{
+    0%{box-shadow:0 0 0 0 #f2545b66;}
+    70%{box-shadow:0 0 0 10px #f2545b00;}
+    100%{box-shadow:0 0 0 0 #f2545b00;}
+  }
+  h1.headline{
+    font-family:'Fraunces',serif; font-weight:600;
+    font-size:clamp(1.9rem,4vw,2.9rem); line-height:1.12; margin:0 auto 14px; max-width:18ch;
+  }
+  h1.headline em{ font-style:normal; color:var(--coral); }
+  .hero p.sub{
+    font-size:1rem; line-height:1.6; color:#c8cedb; max-width:46ch; margin:0 auto;
+  }
+  .ecg-wrap{
+    max-width:640px; margin:34px auto 0; height:110px;
+    border:1px solid #ffffff1c; border-radius:var(--radius);
+    background:linear-gradient(180deg,#0f1e33,#0c1830);
+    overflow:hidden;
+  }
+  .ecg-wrap svg{ width:100%; height:100%; }
+  .ecg-line{
+    fill:none; stroke:var(--teal); stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray:1400; stroke-dashoffset:1400;
+    animation:draw 3.2s ease-in-out infinite;
+    filter:drop-shadow(0 0 6px #3fbf9f88);
+  }
+  @keyframes draw{
+    0%{ stroke-dashoffset:1400; }
+    55%{ stroke-dashoffset:0; }
+    100%{ stroke-dashoffset:-1400; }
+  }
+
+  main{
+    max-width:760px; margin:-50px auto 0; padding:0 6vw 10vh; position:relative;
+  }
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:0 24px 60px -30px rgba(15,30,51,.35);
+    padding:40px 36px;
+  }
+  .card h2{
+    font-family:'Fraunces',serif; font-weight:600; font-size:1.4rem; margin:0 0 6px;
+  }
+  .card > p.lead{ color:var(--ink-soft); margin:0 0 30px; font-size:.92rem; }
+
+  .grid-fields{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:18px; margin-bottom:28px;
+  }
+  .field label{
+    display:block; font-size:.8rem; font-weight:600; color:var(--ink); margin-bottom:6px;
+  }
+  .field input, .field select{
+    width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:10px;
+    font-family:'IBM Plex Mono',monospace; font-size:.88rem; color:var(--ink);
+    background:var(--paper); transition:border-color .2s, box-shadow .2s;
+  }
+  .field input:focus, .field select:focus{
+    outline:none; border-color:var(--teal); box-shadow:0 0 0 3px var(--teal-dim);
+  }
+
+  button.predict-btn{
+    background:var(--navy-950); color:#fff; border:none; cursor:pointer; width:100%;
+    padding:15px 30px; border-radius:999px; font-weight:600; font-size:.95rem;
+    font-family:'Inter',sans-serif; transition:transform .2s ease, background .2s ease;
+  }
+  button.predict-btn:hover{ background:var(--coral); transform:translateY(-2px); }
+
+  .result{
+    margin-bottom:26px; padding:24px 26px; border-radius:14px;
+    display:flex; align-items:center; gap:16px; border:1px solid var(--line);
+  }
+  .result.low{ background:var(--teal-dim); border-color:#3fbf9f55; }
+  .result.high{ background:var(--coral-dim); border-color:#f2545b55; }
+  .result .badge{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#fff;
+  }
+  .result.low .badge{ background:var(--teal); }
+  .result.high .badge{ background:var(--coral); }
+  .result h3{ margin:0 0 4px; font-family:'Fraunces',serif; font-size:1.05rem; }
+  .result p{ margin:0; color:var(--ink-soft); font-size:.86rem; }
+
+  .error-box{
+    margin-bottom:26px; padding:16px 20px; border-radius:12px;
+    background:var(--coral-dim); border:1px solid #f2545b55; color:#9c2a30; font-size:.86rem;
+  }
+
+  footer{
+    text-align:center; padding:28px 6vw; color:var(--ink-soft); font-size:.8rem;
+  }
+</style>
 </head>
-<body class="d-flex align-items-center justify-content-center py-5">
-    <div class="container" style="max-width: 650px;">
-        <h2 class="text-center mb-4 title-text">❤️ Heart Disease Risk Predictor</h2>
-        
-        {% if error %}
-            <div class="alert alert-danger rounded-4 shadow-sm mb-4">{{ error }}</div>
-        {% endif %}
+<body>
 
-        {% if prediction %}
-            <div class="alert {% if prediction == 'High Risk' %}alert-danger{% else %}alert-success{% endif %} text-center shadow-lg rounded-4 p-4 mb-4">
-                <h3 class="fw-bold mb-1">Prediction: {{ prediction }}</h3>
-                <p class="mb-0 fs-5">Confidence Level: {{ probability }}</p>
-            </div>
-        {% endif %}
+<header class="hero">
+  <div class="eyebrow">ML-powered · Instant result</div>
+  <h1 class="headline">Read your heart's <em>signal</em>, before it becomes a symptom.</h1>
+  <p class="sub">Enter a few clinical values and a trained model estimates your risk of heart disease in seconds.</p>
+  <div class="ecg-wrap">
+    <svg viewBox="0 0 400 110" preserveAspectRatio="none">
+      <path class="ecg-line" d="M0,55 L60,55 L80,55 L95,25 L110,85 L125,10 L140,95 L155,55 L180,55 L220,55 L235,40 L250,70 L265,55 L400,55" />
+    </svg>
+  </div>
+</header>
 
-        <form method="POST" class="glass-card p-4 p-md-5">
-            <div class="row g-3">
-                <div class="col-md-6"><label class="form-label">Age</label><input type="number" name="Age" class="form-control" value="50" required></div>
-                <div class="col-md-6"><label class="form-label">Sex (M/F)</label><input type="text" name="Sex" class="form-control" value="M" required></div>
-                <div class="col-md-6"><label class="form-label">Chest Pain Type</label><input type="text" name="ChestPainType" class="form-control" value="ASY" required></div>
-                <div class="col-md-6"><label class="form-label">Resting BP (mm Hg)</label><input type="number" name="RestingBP" class="form-control" value="140" required></div>
-                <div class="col-md-6"><label class="form-label">Cholesterol (mm/dl)</label><input type="number" name="Cholesterol" class="form-control" value="280" required></div>
-                <div class="col-md-6"><label class="form-label">Fasting BS (0 or 1)</label><input type="number" name="FastingBS" class="form-control" value="0" required></div>
-                <div class="col-md-6"><label class="form-label">Resting ECG</label><input type="text" name="RestingECG" class="form-control" value="Normal" required></div>
-                <div class="col-md-6"><label class="form-label">Max HR</label><input type="number" name="MaxHR" class="form-control" value="150" required></div>
-                <div class="col-md-6"><label class="form-label">Exercise Angina (Y/N)</label><input type="text" name="ExerciseAngina" class="form-control" value="N" required></div>
-                <div class="col-md-6"><label class="form-label">Oldpeak</label><input type="number" step="0.1" name="Oldpeak" class="form-control" value="1.0" required></div>
-                <div class="col-12"><label class="form-label">ST Slope (Up/Flat/Down)</label><input type="text" name="ST_Slope" class="form-control" value="Flat" required></div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary btn-custom w-100 py-3 text-white mt-4 fs-5">Analyze Risk Now</button>
-        </form>
+<main>
+  <div class="card">
+    <h2>Enter your clinical details</h2>
+    <p class="lead">All fields are used only to generate your prediction — nothing is stored.</p>
+
+    {% if error %}
+    <div class="error-box">{{ error }}</div>
+    {% endif %}
+
+    {% if prediction %}
+    <div class="result {{ 'high' if prediction == 'High Risk' else 'low' }}">
+      <div class="badge">{{ '⚠' if prediction == 'High Risk' else '✓' }}</div>
+      <div>
+        <h3>Prediction: {{ prediction }}</h3>
+        <p>Confidence level: {{ probability }} — this is a model estimate, not a medical diagnosis.</p>
+      </div>
     </div>
+    {% endif %}
+
+    <form method="POST">
+      <div class="grid-fields">
+        <div class="field">
+          <label>Age</label>
+          <input type="number" name="Age" value="50" required>
+        </div>
+        <div class="field">
+          <label>Sex</label>
+          <select name="Sex" required>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Chest pain type</label>
+          <select name="ChestPainType" required>
+            <option value="TA">Typical angina (TA)</option>
+            <option value="ATA">Atypical angina (ATA)</option>
+            <option value="NAP">Non-anginal pain (NAP)</option>
+            <option value="ASY" selected>Asymptomatic (ASY)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Resting BP (mm Hg)</label>
+          <input type="number" name="RestingBP" value="140" required>
+        </div>
+        <div class="field">
+          <label>Cholesterol (mg/dl)</label>
+          <input type="number" name="Cholesterol" value="280" required>
+        </div>
+        <div class="field">
+          <label>Fasting blood sugar &gt;120 mg/dl</label>
+          <select name="FastingBS" required>
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Resting ECG</label>
+          <select name="RestingECG" required>
+            <option value="Normal" selected>Normal</option>
+            <option value="ST">ST-T wave abnormality</option>
+            <option value="LVH">Left ventricular hypertrophy</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Max heart rate</label>
+          <input type="number" name="MaxHR" value="150" required>
+        </div>
+        <div class="field">
+          <label>Exercise induced angina</label>
+          <select name="ExerciseAngina" required>
+            <option value="N">No</option>
+            <option value="Y">Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Oldpeak (ST depression)</label>
+          <input type="number" step="0.1" name="Oldpeak" value="1.0" required>
+        </div>
+        <div class="field">
+          <label>ST slope</label>
+          <select name="ST_Slope" required>
+            <option value="Up">Upsloping</option>
+            <option value="Flat" selected>Flat</option>
+            <option value="Down">Downsloping</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="predict-btn">Check my risk →</button>
+    </form>
+  </div>
+</main>
+
+<footer>
+  Built by Kausar Fatima
+</footer>
+
 </body>
 </html>
 '''
 
-       
 
 # Robust Model Initializer (Zero External Dependencies)
 def build_and_train_model():
